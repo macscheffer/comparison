@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+    
+    <head>
+        <title>NFL Fantasy Tool - {{ title }}</title>
+        <link rel="stylesheet" href="https://unpkg.com/picnic"/>
+    </head>
+    
+        <nav>
+            <a href="/" class="brand"><span>NFL Fantasy Tool!</span></a>
+                  <!-- responsive-->
+            <input id="bmenub" type="checkbox" class="show">
+            <label for="bmenub" class="burger pseudo button">Menu</label>
+                <input id="bmenub" type="checkbox"
+                class="show">
+                <label for="bmenub" class="burger pseudo button">Menu</label>
+                <div class="menu">
+                    <a action="/" href='/' method="post" class="button danger">Compare Similarity</a>
+                    <a action="/hypotweets" href="/hypos" method="post" class="button success">Create "Tweets"</a>
+                    <a action="/update" href="/update" method="post" class="button warning">Update Data</a>
+                    <a action="/himom" href="/himom" method="post" class="button primary">Hi Mom</a>
+                  </div>
+        </nav>
+            <article class="flex two" style="padding: 3em 4em;">
+            {% block content %}
+            <div>
+                
+                <h2>Who's a better fantasy pick?</h2>
+                <h3>Enter Two Players</h3>
+                
+                <form action="/compare_pick" method="post">
+                    <select name="user1">
+                        {% for user in users %}
+                        <option value="{{ user.name }}">{{ user.name }} </option>
+                        {% endfor %}
+                    </select>
+                <form action="/compare_pick" method="post">
+                    <select name="user2">
+                        {% for user in users %}
+                        <option value="{{ user.name }}">{{ user.name }} </option>
+                        {% endfor %}
+                    </select>
+                <h3>Which position are you comparing?</h3>
+                <form action="/compare_pick" method="post">
+                <select name="user3">
+                    {% for user in users %}
+                    <option value="{{ user.name }}">{{ user.name }}</option>
+                    {% endfor %}
+                    </select>
+                    <input type="submit" value="Compare!" class="button info">
+                </form>
+            </div>
+            <div>
+                <h2>Current Users!</h2>
+                {% for user in users %}
+                <a href="/user/{{ user.name }}"><span class="stack">{{ user.name }}</span></a>
+                {% endfor %}
+                <form action="/user" method="post">
+                    <input type="text" name="user_name" placeholder="User to add">
+                    <input type="submit" value="Add User" class="button success">
+                </form>
+            </div>
+            {% endblock %}
+        </article>
+    </body>
+</html>
