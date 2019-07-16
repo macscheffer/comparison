@@ -7,6 +7,10 @@ verify_ssl = true
 
 [packages]
 flask = "*"
+pandas = "*"
+bs4 = "*"
+requests = "*"
+numpy = "*"
 
 [requires]
 python_version = "3.7"
