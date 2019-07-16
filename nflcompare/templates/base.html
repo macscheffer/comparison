@@ -4,6 +4,8 @@
     <head>
         <title>NFL Fantasy Tool - {{ title }}</title>
         <link rel="stylesheet" href="https://unpkg.com/picnic"/>
+        <link rel="stylesheet" href="{{ url_for('static', filename='gozilla.css') }}"
+        <
     </head>
     
         <nav>
@@ -15,51 +17,37 @@
                 class="show">
                 <label for="bmenub" class="burger pseudo button">Menu</label>
                 <div class="menu">
-                    <a action="/" href='/' method="post" class="button danger">Compare Similarity</a>
-                    <a action="/hypotweets" href="/hypos" method="post" class="button success">Create "Tweets"</a>
-                    <a action="/update" href="/update" method="post" class="button warning">Update Data</a>
-                    <a action="/himom" href="/himom" method="post" class="button primary">Hi Mom</a>
+                    <a action="/" href='/' method="post" class="button danger">Compare two players!</a>
                   </div>
         </nav>
-            <article class="flex two" style="padding: 3em 4em;">
+            <article class="flex two" style="padding: 5em 4em;">
             {% block content %}
+            </div>
+            <div>
+                <h2>Which position are you comparing?</h2>
+                <h3>Submit Below!</h3>
+                <form action="/compare_pick" method="post">
+                <select name="selected_position">
+                    {% for position in positions %}
+                    <option value="{{ position }}">{{ position }}</option>
+                    {% endfor %}
+                    </select>
+                    <input type="submit" value="Select" class="button success">
+            </div>
             <div>
                 
                 <h2>Who's a better fantasy pick?</h2>
                 <h3>Enter Two Players</h3>
-                
+                <div>
                 <form action="/compare_pick" method="post">
-                    <select name="user1">
-                        {% for user in users %}
-                        <option value="{{ user.name }}">{{ user.name }} </option>
-                        {% endfor %}
-                    </select>
-                <form action="/compare_pick" method="post">
-                    <select name="user2">
-                        {% for user in users %}
-                        <option value="{{ user.name }}">{{ user.name }} </option>
-                        {% endfor %}
-                    </select>
-                <h3>Which position are you comparing?</h3>
-                <form action="/compare_pick" method="post">
-                <select name="user3">
-                    {% for user in users %}
-                    <option value="{{ user.name }}">{{ user.name }}</option>
-                    {% endfor %}
-                    </select>
-                    <input type="submit" value="Compare!" class="button info">
-                </form>
-            </div>
-            <div>
-                <h2>Current Users!</h2>
-                {% for user in users %}
-                <a href="/user/{{ user.name }}"><span class="stack">{{ user.name }}</span></a>
-                {% endfor %}
-                <form action="/user" method="post">
-                    <input type="text" name="user_name" placeholder="User to add">
-                    <input type="submit" value="Add User" class="button success">
-                </form>
-            </div>
+                    <label class="stack">
+                    <input type="text" name="player1" placeholder="User to add">
+                    <label class="stack">
+                    <input type="text" name="player2" placeholder="User to add">
+                    <input type="submit" value="Compare!!!!!! :)" class="button primary">
+                </label>
+                </div>
+            </form>
             {% endblock %}
         </article>
     </body>
