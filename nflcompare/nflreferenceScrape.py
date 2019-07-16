@@ -3,11 +3,6 @@ This will have all of the functions that scrape from pro-football-reference.com.
 
 Once fully capable of scraping from site we can offer an API that essentially uses the SQL queries we will be automating anyways.
     - since there are no free NFL API's it'll give us traffic as well as keep our database up to date.
-        - essentially it goes -> API user sends request -> we try to fulfill it using our DB -> if we cant we try to scrape it. 
-            - if we can scrape it we store it in our DB before we send it back.
-            - advertise it as free and play an advertisement for the simulator.
-            - the video is a course on how to use it and why it'll make you rich.
-            - make the API key annoying to get unless you sign up for the simulator.
 
 """
 import pandas as pd
@@ -281,19 +276,16 @@ class Crawl(object):
             - quickQuery is used when exploring the data, and adding URLs to the DB.
             - focusedCrawl is for updating URL's we found that haven't been updated recently or ever.
             - constrainedExplore is exploration. Go find urls starting at this page while staying within these base domains.
-        - it defaults to an empty list of urls - which are for storing urls from any given request. 
-        - stopUpdateMin is a parameter for controlling the priority on updating data. 
-            - if we are monitoring news midseason and we have crawlers going, we may want to update anything in the last 24 hours for a given href type (weather projections) to stopUpdateMin = 5 mins for injury news.
-            - more than likely monitoring news/sentiment and weather will have a lot more to do with constrainedExplore than focusedExplore.
-        - crawl is a parameter that dictates whether the crawler is going to continue on emptying its urls list for the first time. 
-            - in quickQuery it will almost always be False, i.e. we request some values, that gets transformed into a todo list and it completes that list.
-                - in crawl mode it will not only add to that todo list, but continue until the list is empty or some other constraint is hit.
     """
 
     def __init__(self, setting=quickQuery, urls=[], stopUpdateMin=None, crawl=False):
+        return pass
+
+    def __repr__(self):
+        return pass
 
 
-        
+
 
 
         
