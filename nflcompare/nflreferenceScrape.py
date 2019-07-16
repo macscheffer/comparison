@@ -28,7 +28,6 @@ def getBoxscoreData(boxscore_url):
     team_df = team_summary(soup, boxscore_url)
     PlayByPlay = rawPlayByPlay(soup, boxscore_url)
     
-    
     return {boxscore_url : [player_df, team_df, PlayByPlay]}
 
 def getCombineData(combine_url):
@@ -40,8 +39,20 @@ def getCombineData(combine_url):
     
     return {combine_url: players}
 
-def getBoxscoreUrls(baseurl):
-    pass
+def getBoxScoreUrls(year):
+    """
+    Takes in a year and returns all the boxscores for that year.
+    """
+
+    r = requests.get('https://www.pro-football-reference.com/years/' + str(year) + '/games.htm')
+    text = r.text.replace('<!--', '').replace('-->', '')
+    soup = BeautifulSoup(text, 'lxml')
+    boxscores = []
+    for url in soup.findAll(class_='overthrow table_container')[0].findAll('a'):
+        if '/boxscores/' in str(url):
+            boxscores.append('https://www.pro-football-reference.com' + str(url)[9:36])
+    
+    return list(set(boxscores))
 
 def getCombineUrls(start_year, end_year):
     
@@ -197,6 +208,8 @@ def clean_pass_rush_rec(boxscore_url):
     return df.rename(index=df.Player.astype(str)).drop(index=['nan', 'Player']).fillna(0).reset_index().drop(columns=['index'])
 
 def rawPlayByPlay(soup, boxscore_url):
+    
     play_by_play = pd.DataFrame(pd.read_html(str(soup.findAll(class_='overthrow table_container')[19]))[0])
     play_by_play['boxscore'] = boxscore_url
     return play_by_play
+
