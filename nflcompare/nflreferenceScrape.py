@@ -1,9 +1,21 @@
-""" This will have all of the functions that scrape from pro-football-reference.com """
+""" 
+This will have all of the functions that scrape from pro-football-reference.com.
 
+Once fully capable of scraping from site we can offer an API that essentially uses the SQL queries we will be automating anyways.
+    - since there are no free NFL API's it'll give us traffic as well as keep our database up to date.
+        - essentially it goes -> API user sends request -> we try to fulfill it using our DB -> if we cant we try to scrape it. 
+            - if we can scrape it we store it in our DB before we send it back.
+            - advertise it as free and play an advertisement for the simulator.
+            - the video is a course on how to use it and why it'll make you rich.
+            - make the API key annoying to get unless you sign up for the simulator.
+
+"""
 import pandas as pd
 from bs4 import BeautifulSoup
 import requests
 import numpy as np
+import string
+from datetime import datetime
 
 def getBoxscoreData(boxscore_url):
     """
@@ -30,7 +42,7 @@ def getBoxscoreData(boxscore_url):
     
     return {boxscore_url : [player_df, team_df, PlayByPlay]}
 
-def getCombineData(combine_url):
+def extractCombineData(combine_url):
     
     r = requests.get(combine_url)
     text = r.text.replace('<!--', '').replace('-->', '')
@@ -72,7 +84,7 @@ def getCombineData(start_year, end_year):
 
     combine_data = []
     for d in getCombineUrls(start_year=start_year, end_year=end_year):
-        combine_data.append(getCombineData(d))
+        combine_data.append(extractCombineData(d))
 
     combine_df = list(combine_data[0].values())[0].append([list(combine_data[i+1].values())[0] for i in range(0, len(combine_data)-1)]).reset_index().drop(columns=['index'])
 
@@ -106,8 +118,7 @@ def cleanCombineData(combine_df):
     combine_df = combine_df[final_cols]
     return combine_df
 
-def team_summary(soup, boxscore_url):
-    
+def team_summary(soup, boxscore_url): 
     
     df = pd.DataFrame(pd.read_html(str(soup.findAll(class_='overthrow table_container')[4]))[0])
     cols = df.columns
@@ -193,6 +204,59 @@ def team_summary(soup, boxscore_url):
     
     return df
 
+
+def rawPlayByPlay(soup, boxscore_url):
+    
+    play_by_play = pd.DataFrame(pd.read_html(str(soup.findAll(class_='overthrow table_container')[19]))[0])
+    play_by_play['boxscore'] = boxscore_url
+    return play_by_play
+
+def getPlayersBase(): # possibly add datetime.now() as param check which players to update. 
+    """
+    Base Data for NFL Players. 
+    Generates Player URLs from the base + letter
+    """
+    base = 'https://www.pro-football-reference.com/players/'
+    
+    letterUrls = [base + letter for letter in string.ascii_uppercase]
+    
+    tags = []
+    for letterUrl in letterUrls:
+        text = requests.get(letterUrl).text
+        soup = BeautifulSoup(text, 'lxml')
+        for tag in soup.findAll('a'):
+            if '/players/' in str(tag) and len(str(tag)) < 55:
+                tags.append(tag)
+    players = pd.DataFrame({'tags':tags, 'Player':[tag.text for tag in tags], 'url': ['https://www.pro-football-reference.com' + str(tag)[9:][:23] for tag in tags], 'id':[str(tag)[20:28] for tag in tags]})
+    players = players.drop(0).reset_index().drop(columns=['index']).drop_duplicates()
+    players['last_update'] = datetime.now()
+
+    return players
+
+
+def getBoxscoreURLsFromPlayer(playerId):
+    """
+    Put in a player id and get all boxscores for that player.
+        - can be updated to specify after which date. 
+    """
+    
+    r = requests.get('https://www.pro-football-reference.com/players/'+ playerId[0] + '/' + playerId + '/gamelog/')
+    text = r.text.replace('<!--', '').replace('-->', '')
+    soup = BeautifulSoup(text, 'lxml')
+    
+    boxscores = []
+    for url in soup.findAll(class_='overthrow table_container')[0].findAll('a'):
+        if '/boxscores/' in str(url):
+            boxscores.append('https://www.pro-football-reference.com' + str(url)[9:36])
+    for url in soup.findAll(class_='overthrow table_container')[1].findAll('a'):
+        if '/boxscores/' in str(url):
+            boxscores.append('https://www.pro-football-reference.com' + str(url)[9:36])
+            
+    return boxscores
+
+#########################################################################################################33
+"""
+- not sure if needed
 def clean_pass_rush_rec(boxscore_url):
     '''
     cleaning the pass rush rec table.
@@ -205,11 +269,32 @@ def clean_pass_rush_rec(boxscore_url):
     cols = df.columns.get_level_values(1)
     df = pd.DataFrame(df.values, columns=cols)
     
-    return df.rename(index=df.Player.astype(str)).drop(index=['nan', 'Player']).fillna(0).reset_index().drop(columns=['index'])
+    return df.rename(index=df.Player.astype(str)).drop(index=['nan', 'Player']).fillna(0).reset_index().drop(columns=['index'])"""
 
-def rawPlayByPlay(soup, boxscore_url):
-    
-    play_by_play = pd.DataFrame(pd.read_html(str(soup.findAll(class_='overthrow table_container')[19]))[0])
-    play_by_play['boxscore'] = boxscore_url
-    return play_by_play
+
+class Crawl(object):
+    """
+    Crawl Model to extract data from www.pro-football-reference.com
+
+        - there are three settings. quickQuery, focusedCrawl, constrainedExplore
+            - all self explanatory. 
+            - quickQuery is used when exploring the data, and adding URLs to the DB.
+            - focusedCrawl is for updating URL's we found that haven't been updated recently or ever.
+            - constrainedExplore is exploration. Go find urls starting at this page while staying within these base domains.
+        - it defaults to an empty list of urls - which are for storing urls from any given request. 
+        - stopUpdateMin is a parameter for controlling the priority on updating data. 
+            - if we are monitoring news midseason and we have crawlers going, we may want to update anything in the last 24 hours for a given href type (weather projections) to stopUpdateMin = 5 mins for injury news.
+            - more than likely monitoring news/sentiment and weather will have a lot more to do with constrainedExplore than focusedExplore.
+        - crawl is a parameter that dictates whether the crawler is going to continue on emptying its urls list for the first time. 
+            - in quickQuery it will almost always be False, i.e. we request some values, that gets transformed into a todo list and it completes that list.
+                - in crawl mode it will not only add to that todo list, but continue until the list is empty or some other constraint is hit.
+    """
+
+    def __init__(self, setting=quickQuery, urls=[], stopUpdateMin=None, crawl=False):
+
+
+        
+
+
+        
 

@@ -11,6 +11,7 @@ pandas = "*"
 bs4 = "*"
 requests = "*"
 numpy = "*"
+flask-sqlalchemy = "*"
 
 [requires]
 python_version = "3.7"
